@@ -1,7 +1,5 @@
 'use client'
 
-import React from 'react'
-import LazyVideo from '@/app/components/LazyVideo'
 
 // Video data - replace vimeo IDs as needed
 const trendingVideos = [
@@ -52,20 +50,21 @@ const SessionTrending = () => {
                             key={video.id}
                             className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full md:w-[400px]"
                         >
-                            {/* Lazy loaded video - only loads when clicked */}
-                            <LazyVideo
-                                videoId={video.videoId}
-                                title={video.title}
-                                aspectRatio="177.78%"
-                                className="w-full"
-                            />
+                            <div
+                                className={`relative overflow-hidden rounded-[10px] w-full`}
+                                style={{ paddingBottom: "177.78%", height: 0 }}
+                            >
 
-                            {/* Video title overlay */}
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 pointer-events-none">
-                                <h3 className="text-white font-semibold text-lg text-center">
-                                    {video.title}
-                                </h3>
+                                <iframe
+                                    className="absolute top-0 left-0 w-full h-full rounded-[10px]"
+                                    src={`https://player.vimeo.com/video/${video.videoId}?title=0&byline=0&portrait=0&autopause=0&player_id=0&app_id=58479`}
+                                    allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                                    referrerPolicy="strict-origin-when-cross-origin"
+                                    loading="lazy"
+                                />
+
                             </div>
+
                         </article>
                     ))}
                 </div>
