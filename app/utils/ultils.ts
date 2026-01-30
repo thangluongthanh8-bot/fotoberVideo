@@ -141,3 +141,35 @@ export const dataMockSessionUnderConsideration = [
       'From basic touch-ups to more advanced retouching, they’ve proven they can handle all my real estate editing needs. I appreciate how they always consult me on revisions, ensuring the final images match my exact vision every single time.',
   },
 ]
+export const dataFaqSession = [
+  {
+    title: 'What is Video Editing in Real Estate?',
+    description:
+      'Video Editing in Real Estate involves enhancing raw footage to create polished, professional videos that showcase properties in the best light. This can include adding music, transitions, graphics, and other effects to make the video more engaging and appealing to potential buyers.',
+  },
+  {
+    title: 'Can I choose the music and style for my Real Estate Videos?\n',
+    description:
+      'Absolutely! You can provide us with your preferred music tracks and style preferences. Our editors will incorporate your choices into the final video to ensure it aligns with your vision and brand.',
+  },
+  {
+    title: 'What is Drone Video Editing, and why is it beneficial?\n',
+    description:
+      'Drone Video Editing involves enhancing aerial footage to showcase properties from unique perspectives. It is beneficial because it provides a comprehensive view of the property and its surroundings, highlighting features that might not be visible from ground level.',
+  },
+  {
+    title: 'How do I get started with your Video Editing Services?\n',
+    description:
+      'To get started, simply fill out the form with your video editing needs, provide the raw footage, and any specific instructions. Our team will guide you through the process and deliver high-quality, engaging real estate videos tailored to your requirements.',
+  },
+  {
+    title: 'Do you offer custom graphics and animations for my videos?\n',
+    description:
+      'Absolutely! We can create custom graphics and animations tailored to your specific needs. This includes logos, icons, maps, and any other visual elements that can enhance your video and brand identity.',
+  },
+  {
+    title: "What if I'm not satisfied with the final video?\n",
+    description:
+      "Customer satisfaction is our top priority. If you're not satisfied with the final video, we offer revisions to make sure it meets your expectations. Just let us know what changes you need, and we'll make the necessary adjustments.",
+  },
+]

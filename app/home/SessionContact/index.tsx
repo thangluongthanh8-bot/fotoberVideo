@@ -242,37 +242,37 @@ function SessionContact({
   }, [isHideButton, isSuccess, onResetData])
 
   return (
-    <div className="w-full flex flex-col md:flex-row items-center font-montserrat justify-center px-4">
+    <div className="w-full bg-[#043263] flex flex-col md:flex-row items-center font-montserrat justify-center px-4 py-10">
       <div className="container-custom  w-full flex flex-col md:flex-row justify-between gap-6">
         <div className="info w-full md:w-[35%]">
           <LightSpeedInLeft>
-            <h2 className="text-[#043263] font-bold text-[28px]">
+            <h2 className="text-white font-bold text-[28px]">
               Did not find something in our menu or looking for a custom job?
             </h2>
           </LightSpeedInLeft>
           <Fadein>
-            <p className="text-xl text-[#1A1A1A] pt-6">
+            <p className="text-xl text-white pt-6">
               No worries, we have got it covered. Just submit your requirement by filling this
               simple form and our team will get back to you soon.
             </p>
           </Fadein>
           <div className="flex flex-row items-center gap-4 pt-6">
-            <Image alt="fotober" src={imageStep1} className="w-[45px] h-[45px]" />
-            <p className="text-[#1A1A1A] text-[21px]">Fill the form</p>
+            <Image alt="fotober" src={imageStep1} className="w-[45px] h-[45px] invert brightness-200" />
+            <p className="text-white text-[21px]">Fill the form</p>
           </div>
           <div className="flex flex-row items-center gap-4 pt-4">
-            <Image alt="fotober" src={imageStep2} className="w-[45px] h-[45px]" />
-            <p className="text-[#1A1A1A] text-[21px]">
+            <Image alt="fotober" src={imageStep2} className="w-[45px] h-[45px] invert brightness-200" />
+            <p className="text-white text-[21px] border-b border-white">
               {isFromVideoTrial ? 'Share a link video' : 'Upload the images'}
             </p>
           </div>
           <div className="flex flex-row items-center gap-4 pt-4">
-            <Image alt="fotober" src={imageStep3} className="w-[45px] h-[45px]" />
-            <p className="text-[#1A1A1A] text-[21px]">Get the quote</p>
+            <Image alt="fotober" src={imageStep3} className="w-[45px] h-[45px] invert brightness-200" />
+            <p className="text-white text-[21px]">Get the quote</p>
           </div>
           {!isHideButton && (
             <Link href="/start-free-trial">
-              <Button className='btn-bg-primary rounded-[5px] p-2 mt-7 w-max' title="MORE ABOUT OUR SERVICES" />
+              <Button className=' text-white btn-bg-primary rounded-[5px] p-2 mt-7 w-max' title="MORE ABOUT OUR SERVICES" />
             </Link>
           )}
         </div>
@@ -285,15 +285,15 @@ function SessionContact({
           ) : (
             <>
               <div>
-                <p className="text-[#043263] font-semibold text-xl pb-1">Name*</p>
+                <p className="text-white font-semibold text-xl pb-1">Name*</p>
                 <input
                   {...register('name', { required: true, maxLength: 80 })}
                   placeholder="For example: John Wick"
                   className={twMerge(
-                    'border-solid border-[1.5px] outline-0 w-full rounded-[12px] px-4 h-[45px]',
+                    'border-solid border-[1.5px] outline-0 w-full rounded-[12px] px-4 h-[45px] bg-transparent text-white placeholder:text-white/60',
                     errors.name
-                      ? 'border-[#FE2E2E] [boxShadow:_0px_0px_5px_0px_#FE2E2E]'
-                      : 'border-[#000000] [boxShadow:_5px_5px_5px_0px_#000000a1]',
+                      ? 'border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
+                      : 'border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
                   )}
                 />
                 {errors.name && (
@@ -301,15 +301,15 @@ function SessionContact({
                 )}
               </div>
               <div>
-                <p className="text-[#043263] font-semibold text-xl pb-1">Email*</p>
+                <p className="text-white font-semibold text-xl pb-1">Email*</p>
                 <input
                   {...register('email', { required: true, pattern: /^\S+@\S+$/i })}
                   placeholder="For example: JohnWick@gmail.com"
                   className={twMerge(
-                    'border-solid border-[1.7px] outline-0 w-full rounded-[12px] px-4 h-[45px]',
+                    'border-solid border-[1.7px] outline-0 w-full rounded-[12px] px-4 h-[45px] bg-transparent text-white placeholder:text-white/60',
                     errors.email
-                      ? 'border-[#FE2E2E] [boxShadow:_0px_0px_5px_0px_#FE2E2E]'
-                      : 'border-[#000000] [boxShadow:_5px_5px_5px_0px_#000000a1]',
+                      ? 'border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
+                      : 'border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
                   )}
                 />
                 {errors.email && (
@@ -317,7 +317,7 @@ function SessionContact({
                 )}
               </div>
               <div>
-                <p className="text-[#043263] font-semibold text-xl pb-1">Phone number*</p>
+                <p className="text-white font-semibold text-xl pb-1">Phone number*</p>
                 <input
                   {...register('phoneNumber', {
                     required: 'The field is required.',
@@ -333,10 +333,10 @@ function SessionContact({
                   })}
                   placeholder="For example: +123456789"
                   className={twMerge(
-                    'border-solid border-[1.7px] outline-0 w-full rounded-[12px] px-4 h-[45px]',
+                    'border-solid border-[1.7px] outline-0 w-full rounded-[12px] px-4 h-[45px] bg-transparent text-white placeholder:text-white/60',
                     errors.phoneNumber
-                      ? 'border-[#FE2E2E] [boxShadow:_0px_0px_5px_0px_#FE2E2E]'
-                      : 'border-[#000000] [boxShadow:_5px_5px_5px_0px_#000000a1]',
+                      ? 'border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
+                      : 'border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
                   )}
                 />
                 {errors.phoneNumber && (
@@ -344,16 +344,16 @@ function SessionContact({
                 )}
               </div>
               <div className="flex flex-col gap-4 justify-center items-center">
-                <p className="text-[#043263] w-full text-left font-semibold text-xl">
+                <p className="text-white w-full text-left font-semibold text-xl">
                   Choose the service for quotation
                 </p>
                 <select
                   defaultValue=""
                   className={twMerge(
-                    'border-solid border-[1.7px] outline-0 w-full rounded-[12px] px-4 h-[45px] cursor-pointer',
+                    'border-solid border-[1.7px] outline-0 w-full rounded-[12px] px-4 h-[45px] cursor-pointer bg-transparent text-white',
                     errors.service
-                      ? 'border-[#FE2E2E] [boxShadow:_0px_0px_5px_0px_#FE2E2E]'
-                      : 'border-[#000000] [boxShadow:_5px_5px_5px_0px_#000000a1]',
+                      ? 'border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
+                      : 'border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
                   )}
                   {...register('service', { required: true })}
                 >
@@ -372,7 +372,7 @@ function SessionContact({
                 <textarea
                   {...register('description')}
                   placeholder="Write your message here along with"
-                  className="border-[#000000] border-solid border-[1.7px] outline-0 w-full rounded-[12px] p-4 h-[100px] [boxShadow:_5px_5px_5px_0px_#000000a1]"
+                  className="border-white/40 border-solid border-[1.7px] outline-0 w-full rounded-[12px] p-4 h-[100px] [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)] bg-transparent text-white placeholder:text-white/60"
                 />
                 <div className="w-full">
                   <div className="container">
@@ -384,7 +384,7 @@ function SessionContact({
                     >
                       <input {...getInputProps()} />
                       {files?.length > 0 ? (
-                        <div className="w-full overflow-y-hidden overflow-x-auto flex flex-row items-center justify-center gap-4 border-[#000000] border-solid border-[1.5px] rounded-[12px] p-4 h-[120px] cursor-pointer">
+                        <div className="w-full overflow-y-hidden overflow-x-auto flex flex-row items-center justify-center gap-4 border-white/40 border-solid border-[1.5px] rounded-[12px] p-4 h-[120px] cursor-pointer">
                           {files.map((f, index) => (
                             <div key={index} className="flex h-full w-full relative flex-col gap-1">
                               <Image
@@ -403,14 +403,14 @@ function SessionContact({
                           className={twMerge(
                             'w-full flex flex-col items-center justify-center gap-4  border-solid border-[1.5px] rounded-[12px] p-4 h-[120px] cursor-pointer',
                             errors.list_link_share && files.length === 0
-                              ? 'border-[#FE2E2E]'
-                              : 'border-[#000000]',
+                              ? 'border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
+                              : 'border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
                           )}
                         >
-                          <Image alt="fotober" src={iconUpload} className="w-[35px] h-[25px]" />
-                          <div className="flex flex-row items-center border-[#000000] gap-3 rounded-[12px] border-solid border-[1px] p-2">
-                            <Image alt="fotober" src={iconUpload1} className="w-[16px] h-[16px]" />
-                            <p className="text-base text-[#043263] font-semibold">Upload photo </p>
+                          <Image alt="fotober" src={iconUpload} className="w-[35px] h-[25px] invert brightness-200" />
+                          <div className="flex flex-row items-center border-white/40 gap-3 rounded-[12px] border-solid border-[1px] p-2">
+                            <Image alt="fotober" src={iconUpload1} className="w-[16px] h-[16px] invert brightness-200" />
+                            <p className="text-base text-white font-semibold">Upload photo </p>
                           </div>
                         </div>
                       )}
@@ -426,10 +426,10 @@ function SessionContact({
                         })}
                         placeholder={isFromVideoTrial ? 'Share a video link' : 'Share a link'}
                         className={twMerge(
-                          'border-solid border-[1.5px] outline-0 w-full rounded-[12px] px-4 h-[45px] [boxShadow:_5px_5px_5px_0px_#000000a1]',
+                          'border-solid border-[1.5px] outline-0 w-full rounded-[12px] px-4 h-[45px] [boxShadow:_5px_5px_5px_0px_#000000a1] bg-transparent text-white placeholder:text-white/60',
                           errors.list_link_share && files.length === 0
-                            ? ' border-[#FE2E2E]'
-                            : ' border-[#000000]',
+                            ? ' border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
+                            : ' border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
                         )}
                       />
                       {fields.length > 1 && (
@@ -445,7 +445,7 @@ function SessionContact({
                   ))}
                   <button
                     type="button"
-                    className="w-[50px] bg-[#043263] rounded-[8px] h-[50px] text-white text-[28px]"
+                    className="w-[50px] bg-[#043263] rounded-[8px] h-[50px] text-white text-[28px] invert brightness-200"
                     onClick={() => append({ link: '' })}
                   >
                     +

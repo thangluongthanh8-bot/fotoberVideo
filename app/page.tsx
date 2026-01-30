@@ -1,9 +1,10 @@
 import LayoutMain from '@/app/components/layouts/main'
 import SessionUnderConsiderationWithMockContent from '@/app/components/SessionUnderConsiderationWithMockContent'
-import { dataMockSessionUnderConsideration } from '@/app/utils/ultils'
+import { dataFaqSession, dataMockSessionUnderConsideration } from '@/app/utils/ultils'
 import { Metadata } from 'next/types'
 import SessionBg from './home/SessionBg'
 import dynamic from 'next/dynamic'
+import FaqSession from './components/FaqSession'
 
 // Lazy load below-the-fold components for better initial load performance
 const SessionWhyChoose = dynamic(() => import('./home/SessionWhyChoose'), {
@@ -92,8 +93,14 @@ export default function Home() {
             <SessionSimpleSteps />
           </section>
 
-          <section id="bulk-order-form" className="pb-7">
+          <section id="bulk-order-form" >
             <SessionContact />
+          </section>
+          <section className="pb-7">
+            <FaqSession
+              title="Frequently Asked Questions"
+              data={dataFaqSession}
+            />
           </section>
         </main>
       </LayoutMain>
