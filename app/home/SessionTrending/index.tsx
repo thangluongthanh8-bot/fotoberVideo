@@ -1,5 +1,10 @@
 'use client'
 
+import React from 'react'
+import { Pagination } from 'swiper/modules'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import 'swiper/css'
+import 'swiper/css/pagination'
 
 // Video data - replace vimeo IDs as needed
 const trendingVideos = [
@@ -43,30 +48,52 @@ const SessionTrending = () => {
                     </p>
                 </header>
 
-                {/* Videos Grid - Using LazyVideo for performance */}
-                <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
-                    {trendingVideos.map((video) => (
-                        <article
-                            key={video.id}
-                            className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full md:w-[400px]"
-                        >
-                            <div
-                                className={`relative overflow-hidden rounded-[10px] w-full`}
-                                style={{ paddingBottom: "177.78%", height: 0 }}
-                            >
-
-                                <iframe
-                                    className="absolute top-0 left-0 w-full h-full rounded-[10px]"
-                                    src={`https://player.vimeo.com/video/${video.videoId}?title=0&byline=0&portrait=0&autopause=0&player_id=0&app_id=58479`}
-                                    allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-                                    referrerPolicy="strict-origin-when-cross-origin"
-                                    loading="lazy"
-                                />
-
-                            </div>
-
-                        </article>
-                    ))}
+                <div className="">
+                    <Swiper
+                        modules={[Pagination]}
+                        spaceBetween={30}
+                        breakpoints={{
+                            0: {
+                                slidesPerView: 1,
+                                centeredSlides: true,
+                            },
+                            768: {
+                                slidesPerView: 3,
+                                centeredSlides: false,
+                            },
+                        }}
+                        pagination={{
+                            clickable: true,
+                            dynamicBullets: true
+                        }}
+                        style={{
+                            "--swiper-pagination-color": "#ffffff",
+                            "--swiper-pagination-bullet-inactive-color": "#999999",
+                            paddingBottom: "40px"
+                        } as React.CSSProperties}
+                        className="w-full"
+                    >
+                        {trendingVideos.map((video) => (
+                            <SwiperSlide key={video.id}>
+                                <article
+                                    className="relative rounded-2xl overflow-hidden shadow-lg w-full"
+                                >
+                                    <div
+                                        className={`relative overflow-hidden rounded-[10px] w-full`}
+                                        style={{ paddingBottom: "177.78%", height: 0 }}
+                                    >
+                                        <iframe
+                                            className="absolute top-0 left-0 w-full h-full rounded-[10px]"
+                                            src={`https://player.vimeo.com/video/${video.videoId}?title=0&byline=0&portrait=0&autopause=0&player_id=0&app_id=58479`}
+                                            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                                            referrerPolicy="strict-origin-when-cross-origin"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                </article>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
                 </div>
             </div>
         </section>
