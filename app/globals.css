@@ -5,13 +5,6 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -22,5 +15,214 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ============================================
+   Container Custom - Responsive Layout
+   (Migrated from tailwind.config.ts for Tailwind v4)
+   ============================================ */
+.container-custom {
+  width: 100%;
+  max-width: 1140px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* 2xl: 1536px */
+@media (min-width: 1536px) {
+  .container-custom {
+    max-width: 1250px;
+  }
+}
+
+
+.swiper-button-next::after {
+  display: none !important;
+  content: '' !important;
+}
+
+.swiper-navigation-icon {
+  display: none !important;
+}
+
+.swiper-button-prev>svg,
+.swiper-button-next>svg {
+  display: none !important;
+}
+
+.swiper-button-prev svg:not(img *),
+.swiper-button-next svg:not(img *) {
+  display: none !important;
+}
+
+/* Reset default Swiper button styles */
+.swiper-button-prev,
+.swiper-button-next {
+  /* width: auto;
+  height: auto; */
+  margin-top: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%);
+  color: transparent;
+  /* Hide any text/icon color */
+}
+
+/* Other custom classes from tailwind.config.ts */
+.site-content {
+  overflow: hidden;
+}
+
+.shadow-button {
+  box-shadow: 0 2px 6px rgb(0 0 0 / 15%);
+}
+
+.itemBox:hover {
+  transform: translateY(-3px) !important;
+  transition: transform 0.195s ease-in-out;
+  box-shadow: 0 -12px 24px rgb(0 0 0 / 0%), 0 18px 24px rgb(0 0 0 / 8%), 0 20px 10px rgb(0 0 0 / 20%);
+}
+
+.shadow-button-hover:hover {
+  box-shadow: 0 10px 20px rgb(164 155 136 / 30%);
+  transform: translateY(-3px);
+  color: #2e7dff;
+}
+
+.text-color-theme {
+  color: #043263;
+}
+
+.text-align-last-center {
+  text-align-last: center;
+}
+
+/* ============================================
+   Custom Animations (replaces animate.css)
+   ============================================ */
+
+/* Fade In Up Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Light Speed In Left */
+@keyframes lightSpeedInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%) skewX(30deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateX(0) skewX(-10deg);
+  }
+
+  80% {
+    transform: skewX(5deg);
+  }
+
+  to {
+    transform: skewX(0);
+  }
+}
+
+.animate-light-speed-in-left {
+  animation: lightSpeedInLeft 0.8s ease-out forwards;
+}
+
+/* Slide In Right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+/* Scale In */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out forwards;
+}
+
+.slide-team-fade {
+  position: relative;
+}
+
+.slide-team-fade::before,
+.slide-team-fade::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 15%;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.slide-team-fade::before {
+  left: 0;
+  background: linear-gradient(to right, rgb(255, 255, 255) 0%, rgb(255, 255, 255) 40%, rgba(255, 255, 255, 0.548) 70%, rgba(255, 255, 255, 0) 100%);
+}
+
+.slide-team-fade::after {
+  right: 0;
+  background: linear-gradient(to left, rgb(255, 255, 255) 0%, rgb(255, 255, 255) 40%, rgba(255, 255, 255, 0.568) 70%, rgba(255, 255, 255, 0) 100%);
+}
+
+@media (max-width: 768px) {
+
+  .slide-team-fade::before,
+  .slide-team-fade::after {
+    width: 40px;
+  }
 }
