@@ -5,7 +5,7 @@ import { Metadata } from 'next/types'
 import SessionBg from './home/SessionBg'
 import dynamic from 'next/dynamic'
 import FaqSession from './components/FaqSession'
-
+import { headers } from 'next/headers';
 // Lazy load below-the-fold components for better initial load performance
 const SessionWhyChoose = dynamic(() => import('./home/SessionWhyChoose'), {
   loading: () => <div className="h-[400px] animate-pulse bg-gray-100" />,
@@ -60,8 +60,10 @@ export const metadata: Metadata = {
     images: `${process.env.BASE_URL}/thumb/image_thumb.png`,
   },
 }
-
-export default function Home() {
+export default async function Home() {
+  const headerList = headers();
+  const country = (await headerList).get('x-user-country');
+  console.log("country", country)
   return (
     <>
       <LayoutMain>
