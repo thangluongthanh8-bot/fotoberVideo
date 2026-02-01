@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   // 1. Lấy mã quốc gia từ header của Vercel
   // Nếu chạy Localhost thì sẽ null, nên fallback về 'VN' (hoặc 'Local') để test
-  const country = request.headers.get('x-vercel-ip-country');
+  const country = request.headers.get('x-vercel-ip-country') || 'Local';
 
   // 2. Gắn header này vào request để gửi xuống Page/API
   const requestHeaders = new Headers(request.headers);
