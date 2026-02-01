@@ -34,6 +34,8 @@ const ButtonBanner = ({
 }
 
 function SessionBg() {
+  const [swiperReady, setSwiperReady] = React.useState(false)
+
   const handleScroll = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
     const section = document.querySelector('#bulk-order-form')
@@ -47,7 +49,46 @@ function SessionBg() {
 
   return (
     <div className="relative">
+      {/* Static Hero Overlay to improve LCP */}
+      <div
+        className={`absolute inset-0 z-20 w-full h-full bg-white transition-opacity duration-700 ${swiperReady ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+      >
+        <div className="relative">
+          <div className="absolute w-full h-full bg-[#00000085]" />
+          <h1 className="absolute opacity-0">Transforming Real Estate - Elevating Visions</h1>
+          <div className="absolute top-14 left-0 flex w-full h-full flex-col justify-center items-center z-10">
+            <div className="xl:h-[117px] xl:w-[1258px] flex flex-col gap-4 justify-center items-center">
+              <div className="text-white text-[21px] md:text-[32px] lg:text-[36px] xl:text-[40px] text-center font-bold uppercase">
+                Transforming Real Estate - Elevating Visions
+              </div>
+              <div className="text-white text-center text-[16px] md:text-[20px] font-bold animate-fade-in-up">
+                Top-notch Real Estate Photo &amp; Video Editing Service
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 md:gap-12 justify-center items-center mt-10 md:mt-20 animate-fade-in-up">
+              <Link href="https://orders.fotober.com/">
+                <ButtonBanner title="START NOW" />
+              </Link>
+              <ButtonBanner onClick={handleScroll} title=" BOOK A TRIAL" />
+            </div>
+          </div>
+          <Image
+            alt="Fotober real estate photo and video editing services - transforming property visuals"
+            src={ImageBgHome}
+            width={1920}
+            height={850}
+            quality={60}
+            priority
+            fetchPriority="high"
+            sizes="100vw"
+            className="w-full !h-[650px] md:!h-[850px] object-cover"
+          />
+        </div>
+      </div>
+
       <Swiper
+        onInit={() => setSwiperReady(true)}
         grabCursor
         loop
         allowTouchMove

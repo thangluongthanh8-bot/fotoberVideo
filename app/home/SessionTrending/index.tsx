@@ -5,6 +5,7 @@ import { Pagination } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import 'swiper/css'
 import 'swiper/css/pagination'
+import VimeoPlayer from '@/app/components/commons/VimeoPlayer'
 
 // Video data - replace vimeo IDs as needed
 const trendingVideos = [
@@ -82,12 +83,10 @@ const SessionTrending = () => {
                                         className={`relative overflow-hidden rounded-[10px] w-full`}
                                         style={{ paddingBottom: "177.78%", height: 0 }}
                                     >
-                                        <iframe
+                                        <VimeoPlayer
+                                            videoId={video.videoId}
+                                            title={video.title}
                                             className="absolute top-0 left-0 w-full h-full rounded-[10px]"
-                                            src={`https://player.vimeo.com/video/${video.videoId}?title=0&byline=0&portrait=0&autopause=0&player_id=0&app_id=58479`}
-                                            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-                                            referrerPolicy="strict-origin-when-cross-origin"
-                                            loading="lazy"
                                         />
                                     </div>
                                 </article>

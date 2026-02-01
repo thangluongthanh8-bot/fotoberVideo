@@ -86,6 +86,10 @@ function SessionContact({
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentSource = searchParams.get('utm_source')
+  const currentMedium = searchParams.get('utm_medium')
+  const currentCampaign = searchParams.get('utm_campaign')
+  const currentContent = searchParams.get('utm_content')
+  const currentTerm = searchParams.get('utm_term')
 
   // handler upload file
 
@@ -180,6 +184,10 @@ function SessionContact({
               category: dataSubmit.service,
               list_link_share: dataSubmit?.list_link_share,
               utm_source: currentSource,
+              utm_medium: currentMedium,
+              utm_campaign: currentCampaign,
+              utm_content: currentContent,
+              utm_term: currentTerm,
               list_image: {
                 create: imageMap,
               },
@@ -206,6 +214,10 @@ function SessionContact({
               description: dataSubmit?.description,
               category: dataSubmit.service,
               utm_source: currentSource,
+              utm_medium: currentMedium,
+              utm_campaign: currentCampaign,
+              utm_content: currentContent,
+              utm_term: currentTerm,
               list_link_share: dataSubmit?.list_link_share,
             }),
           )
@@ -221,7 +233,16 @@ function SessionContact({
         }
       }
     },
-    [currentSource, files, isHideButton, router],
+    [
+      currentSource,
+      currentMedium,
+      currentCampaign,
+      currentContent,
+      currentTerm,
+      files,
+      isHideButton,
+      router
+    ],
   )
 
   const onResetData = useCallback(() => {
@@ -357,11 +378,11 @@ function SessionContact({
                   )}
                   {...register('service', { required: true })}
                 >
-                  <option value="" disabled hidden>
+                  <option value="" disabled hidden className='text-white'>
                     Select services
                   </option>
                   {categories?.map((category: Category) => (
-                    <option key={category.id} value={category.id}>
+                    <option key={category.id} value={category.id} className='text-black'>
                       {category.title}
                     </option>
                   ))}

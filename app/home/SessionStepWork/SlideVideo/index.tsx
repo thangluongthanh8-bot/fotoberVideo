@@ -7,6 +7,7 @@ import 'swiper/css/navigation'
 import iconNext from '../assets/next.png'
 import iconPrev from '../assets/prev.png'
 import Image from 'next/image'
+import VimeoPlayer from '@/app/components/commons/VimeoPlayer'
 const listContentVideo = [
     {
         title: 'Professional Color Grading\n',
@@ -86,13 +87,10 @@ const SlideVideo = () => {
                                     style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}
                                     className="rounded-[10px] shadow-lg"
                                 >
-                                    <iframe
-                                        className="rounded-[10px]"
-                                        src={`https://player.vimeo.com/video/${item.videoId}?title=0&byline=0&portrait=0&autopause=0&player_id=0&app_id=58479`}
-                                        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-                                        referrerPolicy="strict-origin-when-cross-origin"
-                                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                                    <VimeoPlayer
+                                        videoId={item.videoId}
                                         title={item.title}
+                                        className="rounded-[10px] absolute top-0 left-0 w-full h-full"
                                     />
                                 </div>
                                 <p className="text-[16px] md:text-[20px] font-bold text-center mt-3 md:mt-5 text-[#043263] px-2">
