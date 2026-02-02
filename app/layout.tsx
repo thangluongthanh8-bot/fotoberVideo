@@ -19,13 +19,13 @@ export const metadata: Metadata = {
     description,
     type: 'website',
     url: 'https://video.fotober.com',
-    images: '/logo-footer.png',
+    images: '/logo.png',
   },
   twitter: {
     card: 'summary_large_image',
     title,
     description,
-    images: '/logo-footer.png',
+    images: '/logo.png',
   },
 }
 const montserrat = Montserrat({
@@ -107,7 +107,7 @@ const schemaData = {
   },
   logo: {
     '@type': 'ImageObject',
-    '@id': 'https://fotober.com/#logo',
+    '@id': 'https://videoediting.fotobe.com/#logo',
     inLanguage: 'vi-VN',
     url: 'https://fotober.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo.5da829dc.png&w=640&q=75',
     name: 'FOTOBER',
@@ -255,13 +255,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const headerList = headers();
-  const country = (await headerList).get('x-user-country');
-  console.log("country", country)
+
   return (
     <html lang="en">
       <head>
-        <link rel="shortcut icon" href="./logo-footer.png" />
+        <link rel="shortcut icon" href="/logo.png" />
         {/* Preconnect để tải font và assets nhanh hơn */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
