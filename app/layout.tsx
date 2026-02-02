@@ -5,6 +5,7 @@ import './globals.css'
 import Script from 'next/script'
 import { Montserrat } from 'next/font/google'
 import { Suspense } from 'react'
+import { headers } from 'next/headers'
 
 const title = 'Fotober Video - Real Estate Video Editing'
 const description =
@@ -249,11 +250,14 @@ const schemaData = {
     },
   ],
 }
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const headerList = headers();
+  const country = (await headerList).get('x-user-country');
+  console.log("country", country)
   return (
     <html lang="en">
       <head>

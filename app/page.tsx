@@ -60,10 +60,8 @@ export const metadata: Metadata = {
     images: `${process.env.BASE_URL}/thumb/image_thumb.png`,
   },
 }
-export default async function Home() {
-  const headerList = headers();
-  const country = (await headerList).get('x-user-country');
-  console.log("country", country)
+export default function Home() {
+
   return (
     <>
       <LayoutMain>
