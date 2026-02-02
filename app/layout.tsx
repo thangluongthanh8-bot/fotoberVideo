@@ -6,6 +6,7 @@ import Script from 'next/script'
 import { Montserrat } from 'next/font/google'
 import { Suspense } from 'react'
 import { headers } from 'next/headers'
+import { GoogleTagManager } from '@next/third-parties/google'
 
 const title = 'Fotober Video - Real Estate Video Editing'
 const description =
@@ -273,6 +274,7 @@ export default async function RootLayout({
         />
       </head>
       <body className={montserrat.className}>
+        <GoogleTagManager gtmId="GTM-KMKGFKBC" />
         <Suspense fallback={<div />}>
           {children}
         </Suspense>
