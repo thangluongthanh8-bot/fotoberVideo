@@ -98,7 +98,7 @@ function SessionContact({
   const [isErrorSubmitForm, setIsErrorSubmitForm] = useState<boolean>(false)
   const [isSuccess, setIsSuccess] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
-  const [categories, setCategories] = useState<Category[]>([])
+  // const [categories, setCategories] = useState<Category[]>([])
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -126,21 +126,21 @@ function SessionContact({
   })
 
   // Fetch categories from Directus
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const result = await clientDirectus.request(
-          readItems('categories', {
-            fields: ['id', 'title', 'color', 'slug'],
-          })
-        ) as Category[]
-        setCategories(result)
-      } catch (error) {
-        console.error('Failed to fetch categories:', error)
-      }
-    }
-    fetchCategories()
-  }, [])
+  // useEffect(() => {
+  //   const fetchCategories = async () => {
+  //     try {
+  //       const result = await clientDirectus.request(
+  //         readItems('categories', {
+  //           fields: ['id', 'title', 'color', 'slug'],
+  //         })
+  //       ) as Category[]
+  //       setCategories(result)
+  //     } catch (error) {
+  //       console.error('Failed to fetch categories:', error)
+  //     }
+  //   }
+  //   fetchCategories()
+  // }, [])
 
   const onCreateContact: SubmitHandler<FormValues> = React.useCallback(
     async (dataSubmit) => {
@@ -365,10 +365,10 @@ function SessionContact({
                 )}
               </div>
               <div className="flex flex-col gap-4 justify-center items-center">
-                <p className="text-white w-full text-left font-semibold text-xl">
+                {/* <p className="text-white w-full text-left font-semibold text-xl">
                   Choose the service for quotation
-                </p>
-                <select
+                </p> */}
+                {/* <select
                   defaultValue=""
                   className={twMerge(
                     'border-solid border-[1.7px] outline-0 w-full rounded-[12px] px-4 h-[45px] cursor-pointer bg-transparent text-white',
@@ -389,7 +389,7 @@ function SessionContact({
                 </select>
                 {errors.service && (
                   <p className="text-[#FE2E2E] w-full text-sm  text-left">The field is required.</p>
-                )}
+                )} */}
                 <textarea
                   {...register('description')}
                   placeholder="Write your message here along with"

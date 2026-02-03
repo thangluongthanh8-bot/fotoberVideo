@@ -272,9 +272,9 @@ export default async function RootLayout({
             __html: JSON.stringify(schemaData),
           }}
         />
+        <GoogleTagManager gtmId="GTM-KMKGFKBC" />
       </head>
       <body className={montserrat.className}>
-        <GoogleTagManager gtmId="GTM-KMKGFKBC" />
         <Suspense fallback={<div />}>
           {children}
         </Suspense>
