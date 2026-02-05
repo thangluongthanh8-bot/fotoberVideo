@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
-import { Readable } from 'stream'
 
 const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || ''
 
@@ -15,75 +14,88 @@ oauth2Client.setCredentials({
     refresh_token: process.env.GOOGLE_OAUTH_REFRESH_TOKEN
 })
 
-// Initialize Drive API
-const drive = google.drive({ version: 'v3', auth: oauth2Client })
-
-// POST: Upload file directly through server (proxy to avoid CORS)
+// POST: Initialize resumable upload session (returns upload URL)
 export async function POST(request: NextRequest) {
-    console.log('=== Starting Server-Side Upload ===')
+    console.log('=== Initializing Resumable Upload Session ===')
 
     try {
-        const formData = await request.formData()
-        const file = formData.get('file') as File
+        const body = await request.json()
+        const { fileName, fileType, fileSize } = body
 
-        if (!file) {
+        if (!fileName || !fileType) {
             return NextResponse.json(
-                { error: 'No file provided' },
+                { error: 'fileName and fileType are required' },
                 { status: 400 }
             )
         }
 
-        const fileName = `${Date.now()}_${file.name}`
-        console.log('File info:', {
-            fileName,
-            fileType: file.type,
-            fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`
-        })
+        const finalFileName = `${Date.now()}_${fileName}`
+        console.log('File info:', { finalFileName, fileType, fileSize })
 
-        // Convert File to Buffer
-        const arrayBuffer = await file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
+        // Get fresh access token
+        const { token } = await oauth2Client.getAccessToken()
 
-        // Create readable stream from buffer
-        const stream = new Readable()
-        stream.push(buffer)
-        stream.push(null)
+        if (!token) {
+            return NextResponse.json(
+                { error: 'Failed to get access token' },
+                { status: 500 }
+            )
+        }
 
-        // Upload to Google Drive using googleapis
-        const response = await drive.files.create({
-            requestBody: {
-                name: fileName,
-                parents: DRIVE_FOLDER_ID ? [DRIVE_FOLDER_ID] : undefined,
-            },
-            media: {
-                mimeType: file.type,
-                body: stream,
-            },
-            fields: 'id,name,webViewLink',
-        })
+        // Initialize resumable upload session with Google Drive
+        const initResponse = await fetch(
+            'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'X-Upload-Content-Type': fileType,
+                    'X-Upload-Content-Length': fileSize?.toString() || '0',
+                },
+                body: JSON.stringify({
+                    name: finalFileName,
+                    parents: DRIVE_FOLDER_ID ? [DRIVE_FOLDER_ID] : undefined,
+                }),
+            }
+        )
 
-        console.log('=== Upload Complete ===')
-        console.log('File ID:', response.data.id)
-        console.log('File Name:', response.data.name)
+        if (!initResponse.ok) {
+            const errorText = await initResponse.text()
+            console.error('Init upload error:', errorText)
+            return NextResponse.json(
+                { error: 'Failed to initialize upload', details: errorText },
+                { status: initResponse.status }
+            )
+        }
 
-        const fileId = response.data.id
-        const viewLink = response.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`
+        // Get the resumable upload URL from response header
+        const uploadUrl = initResponse.headers.get('Location')
+
+        if (!uploadUrl) {
+            return NextResponse.json(
+                { error: 'No upload URL received from Google Drive' },
+                { status: 500 }
+            )
+        }
+
+        console.log('=== Upload Session Created ===')
+        console.log('Upload URL obtained successfully')
 
         return NextResponse.json({
             success: true,
-            fileId: fileId,
-            fileName: response.data.name,
-            viewLink: viewLink,
+            uploadUrl,
+            fileName: finalFileName,
         })
 
     } catch (error: any) {
-        console.error('=== Upload Error ===')
+        console.error('=== Init Upload Error ===')
         console.error('Error:', error?.message)
         console.error('Details:', error)
 
         return NextResponse.json(
             {
-                error: 'Failed to upload file',
+                error: 'Failed to initialize upload',
                 details: error?.message || 'Unknown error'
             },
             { status: 500 }
@@ -91,9 +103,9 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// Config to allow large file uploads
+// Config
 export const config = {
     api: {
-        bodyParser: false,
+        bodyParser: true,
     },
 }

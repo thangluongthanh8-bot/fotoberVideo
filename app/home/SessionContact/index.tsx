@@ -486,12 +486,12 @@ function SessionContact({
                     <div key={item.id} className="flex flex-row items-center gap-4 mb-3">
                       <input
                         {...register(`list_link_share.${index}.link` as const, {
-                          required: files.length === 0 && !uploadedVideoLink,
+                          required: files.length === 0,
                         })}
                         placeholder={isFromVideoTrial ? 'Share a video link' : 'Share a link'}
                         className={twMerge(
                           'border-solid border-[1.5px] outline-0 w-full rounded-[12px] px-4 h-[45px] [boxShadow:_5px_5px_5px_0px_#000000a1] bg-transparent text-white placeholder:text-white/60',
-                          errors.list_link_share && files.length === 0 && !uploadedVideoLink
+                          errors.list_link_share && files.length === 0
                             ? ' border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
                             : ' border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
                         )}
