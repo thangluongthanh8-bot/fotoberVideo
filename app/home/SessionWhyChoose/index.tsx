@@ -86,7 +86,7 @@ function SessionWhyChoose() {
           <h2 className="w-full text-wrap text-center uppercase font-montserrat text-[#043263] font-extrabold text-lg md:text-[23px] md:leading-[45px] my-0">
             Real Estate Video Editing
           </h2>
-          <p className="text-base text-justify text-[#000] max-w-[800px] m-auto mt-1">
+          <p className="text-base text-justify text-[#000] max-w-[800px] m-auto mt-5">
             At Fotober's Real Estate Video Editing Services, we turn raw footage into capturing
             property videos using techniques like advanced color correction for cinematic,
             natural, or modern tones, smooth transitions, and professional lighting adjustments.

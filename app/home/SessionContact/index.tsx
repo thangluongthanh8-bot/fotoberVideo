@@ -5,6 +5,8 @@ import LightSpeedInLeft from '@/app/components/animations/LightSpeedInLeft'
 import Button from '@/app/components/commons/Button'
 import FormSuccess from '@/app/components/FormSuccess'
 import { clientDirectus } from '@/app/utils/ultils'
+import { uploadToGoogleDrive, formatFileSize, UploadProgress } from '@/app/utils/googleDriveUpload'
+import { compressVideo, CompressionProgress, isCompressionSupported } from '@/app/utils/videoCompression'
 import { uploadFiles, createItem, readItems } from '@directus/sdk'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -39,6 +41,7 @@ type FormValues = {
   description?: string
   imagePreview?: string
   list_link_share?: LinkInput[]
+  video_link?: string
 }
 
 interface FileUploadResponse {
@@ -98,8 +101,20 @@ function SessionContact({
   const [isErrorSubmitForm, setIsErrorSubmitForm] = useState<boolean>(false)
   const [isSuccess, setIsSuccess] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
-  // const [categories, setCategories] = useState<Category[]>([])
 
+  // Video upload states
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [videoUploadProgress, setVideoUploadProgress] = useState<number>(0)
+  const [videoUploadSpeed, setVideoUploadSpeed] = useState<string>('')
+  const [videoUploadEta, setVideoUploadEta] = useState<string>('')
+  const [isCompressing, setIsCompressing] = useState<boolean>(false)
+  const [compressionProgress, setCompressionProgress] = useState<number>(0)
+  const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false)
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null)
+  const [uploadedVideoLink, setUploadedVideoLink] = useState<string | null>(null)
+  const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null)
+  const [isProcessingOnServer, setIsProcessingOnServer] = useState<boolean>(false)
+  // const [categories, setCategories] = useState<Category[]>([])
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'list_link_share',
@@ -122,6 +137,96 @@ function SessionContact({
         ),
       )
       setIsUploadFileError(false)
+    },
+  })
+
+  // Video dropzone for Google Drive upload with compression
+  const { getRootProps: getVideoRootProps, getInputProps: getVideoInputProps } = useDropzone({
+    noDrag: true,
+    accept: {
+      'video/*': ['.mp4', '.mov', '.avi', '.webm', '.mkv'],
+    },
+    maxFiles: 1,
+    maxSize: 300 * 1024 * 1024, // 300MB
+    onDropRejected: (fileRejections) => {
+      fileRejections.forEach((rejection) => {
+        const error = rejection.errors[0]
+        if (error.code === 'file-too-large') {
+          setVideoUploadError('File is too large. Maximum size is 300MB.')
+        } else {
+          setVideoUploadError(error.message)
+        }
+      })
+    },
+    onDrop: async (acceptedFiles) => {
+      const file = acceptedFiles[0]
+      if (!file) return
+
+      // Reset states
+      setVideoFile(file)
+      setVideoUploadError(null)
+      setVideoUploadProgress(0)
+      setCompressionProgress(0)
+      setUploadedVideoLink(null)
+
+      try {
+        let fileToUpload: File = file
+
+        // Compress video if file is large (>10MB) and browser supports it
+        if (file.size > 10 * 1024 * 1024 && isCompressionSupported()) {
+          setIsCompressing(true)
+
+          const compressionResult = await compressVideo(
+            file,
+            { quality: 'medium', maxWidth: 1280, maxHeight: 720 },
+            (progress: CompressionProgress) => {
+              setCompressionProgress(progress.progress)
+            }
+          )
+
+          setIsCompressing(false)
+
+          if (compressionResult.success && compressionResult.compressedFile) {
+            fileToUpload = compressionResult.compressedFile
+            console.log(`Compressed: ${compressionResult.originalSize} -> ${compressionResult.compressedSize} (${compressionResult.compressionRatio}% reduction)`)
+          }
+        }
+
+        // Upload to Google Drive
+        setIsUploadingVideo(true)
+
+        const result = await uploadToGoogleDrive({
+          file: fileToUpload,
+          chunkSize: 50 * 1024 * 1024, // 50MB chunks
+          onProgress: (progress: UploadProgress) => {
+            setVideoUploadProgress(progress.percentage)
+            if (progress.speed) setVideoUploadSpeed(progress.speed)
+            if (progress.eta) setVideoUploadEta(progress.eta)
+            // When upload to server is complete (100%), show processing state
+            if (progress.percentage >= 100) {
+              setIsProcessingOnServer(true)
+            }
+          },
+        })
+
+        setIsProcessingOnServer(false)
+
+        if (result.success && result.viewLink) {
+          setUploadedVideoLink(result.viewLink)
+          // Generate video thumbnail preview
+          const thumbnailUrl = URL.createObjectURL(file)
+          setVideoThumbnail(thumbnailUrl)
+        } else {
+          setVideoUploadError(result.error || 'Upload failed')
+        }
+      } catch (error) {
+        setVideoUploadError('Failed to process video. Please try again.')
+        console.error('Video upload error:', error)
+        setIsProcessingOnServer(false)
+      } finally {
+        setIsCompressing(false)
+        setIsUploadingVideo(false)
+      }
     },
   })
 
@@ -175,6 +280,7 @@ function SessionContact({
           }
         })
         try {
+          console.log('uploadedVideoLink', uploadedVideoLink)
           await clientDirectus.request(
             createItem('contact_form_home', {
               name: dataSubmit.name,
@@ -183,6 +289,7 @@ function SessionContact({
               description: dataSubmit?.description,
               category: dataSubmit.service,
               list_link_share: dataSubmit?.list_link_share,
+              video_link: uploadedVideoLink || undefined,
               utm_source: currentSource,
               utm_medium: currentMedium,
               utm_campaign: currentCampaign,
@@ -206,6 +313,8 @@ function SessionContact({
       } else {
         setLoading(true)
         try {
+          console.log("uploadedVideoLink2222", uploadedVideoLink);
+
           await clientDirectus.request(
             createItem('contact_form_home', {
               name: dataSubmit.name,
@@ -219,6 +328,7 @@ function SessionContact({
               utm_content: currentContent,
               utm_term: currentTerm,
               list_link_share: dataSubmit?.list_link_share,
+              video_link: uploadedVideoLink || undefined,
             }),
           )
         } catch {
@@ -241,7 +351,8 @@ function SessionContact({
       currentTerm,
       files,
       isHideButton,
-      router
+      router,
+      uploadedVideoLink
     ],
   )
 
@@ -395,60 +506,119 @@ function SessionContact({
                   placeholder="Write your message here along with"
                   className="border-white/40 border-solid border-[1.7px] outline-0 w-full rounded-[12px] p-4 h-[100px] [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)] bg-transparent text-white placeholder:text-white/60"
                 />
+
+                {/* Video Upload Section */}
                 <div className="w-full">
+                  <p className="text-white font-semibold text-lg pb-2">Upload Video (Optional)</p>
                   <div className="container">
                     <div
-                      {...getRootProps({
+                      {...getVideoRootProps({
                         className: 'dropzone',
                         onDrop: (event) => event.stopPropagation(),
                       })}
                     >
-                      <input {...getInputProps()} />
-                      {/* {files?.length > 0 ? (
-                        <div className="w-full overflow-y-hidden overflow-x-auto flex flex-row items-center justify-center gap-4 border-white/40 border-solid border-[1.5px] rounded-[12px] p-4 h-[120px] cursor-pointer">
-                          {files.map((f, index) => (
-                            <div key={index} className="flex h-full w-full relative flex-col gap-1">
-                              <Image
-                                width={64}
-                                height={64}
-                                alt="fotober"
+                      <input {...getVideoInputProps()} />
+                      {isCompressing ? (
+                        <div className="w-full flex flex-col items-center justify-center gap-3 border-yellow-500/60 border-solid border-[1.5px] rounded-[12px] p-4 h-[140px]">
+                          <p className="text-yellow-400 text-sm font-semibold">
+                            🔄 Compressing video for faster upload...
+                          </p>
+                          <div className="w-full bg-white/20 rounded-full h-3">
+                            <div
+                              className="bg-yellow-500 h-3 rounded-full transition-all duration-300"
+                              style={{ width: `${compressionProgress}%` }}
+                            />
+                          </div>
+                          <p className="text-white text-sm">{compressionProgress}%</p>
+                        </div>
+                      ) : isUploadingVideo ? (
+                        <div className="w-full flex flex-col items-center justify-center gap-3 border-white/40 border-solid border-[1.5px] rounded-[12px] p-4 h-[120px]">
+                          <p className="text-white text-sm">
+                            📤 Uploading: {videoFile?.name}
+                          </p>
+                          <p className="text-white/60 text-xs">
+                            {formatFileSize(videoFile?.size || 0)}
+                          </p>
+                          {/* Indeterminate processing bar */}
+                          <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+                            <div className="h-3 bg-green-500 rounded-full animate-[loading_1.5s_ease-in-out_infinite] w-1/3" />
+                          </div>
+                          <span className="font-bold text-green-400 text-sm">Processing...</span>
+                        </div>
+                      ) : uploadedVideoLink ? (
+                        <div className="w-full flex flex-row items-center gap-4 border-green-500 border-solid border-[1.5px] rounded-[12px] p-4 h-[80px]">
+                          {/* Success icon */}
+                          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
 
-                                src={f.preview}
-                                className="h-full w-full object-contain relative"
-                              />
-                            </div>
-                          ))}
+                          {/* File Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-green-500 font-semibold text-sm">Upload thành công!</p>
+                            <p className="text-white text-sm truncate" title={videoFile?.name}>{videoFile?.name}</p>
+                            <p className="text-white/60 text-xs">{formatFileSize(videoFile?.size || 0)}</p>
+                          </div>
+
+                          {/* Remove button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setVideoFile(null)
+                              setUploadedVideoLink(null)
+                              setVideoUploadProgress(0)
+                              if (videoThumbnail) {
+                                URL.revokeObjectURL(videoThumbnail)
+                                setVideoThumbnail(null)
+                              }
+                            }}
+                            className="text-red-400 hover:text-red-300 p-2 flex-shrink-0"
+                            title="Xóa video"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </div>
                       ) : (
                         <div
                           className={twMerge(
-                            'w-full flex flex-col items-center justify-center gap-4  border-solid border-[1.5px] rounded-[12px] p-4 h-[120px] cursor-pointer',
-                            errors.list_link_share && files.length === 0
+                            'w-full flex flex-col items-center justify-center gap-4 border-solid border-[1.5px] rounded-[12px] p-4 h-[120px] cursor-pointer hover:border-white/60 transition-all',
+                            videoUploadError
                               ? 'border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
                               : 'border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
                           )}
                         >
-                          <Image alt="fotober" src={iconUpload} className="w-[35px] h-[25px] invert brightness-200" />
+                          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
                           <div className="flex flex-row items-center border-white/40 gap-3 rounded-[12px] border-solid border-[1px] p-2">
                             <Image alt="fotober" src={iconUpload1} className="w-[16px] h-[16px] invert brightness-200" />
-                            <p className="text-base text-white font-semibold">Upload photo </p>
+                            <p className="text-base text-white font-semibold">Upload video</p>
                           </div>
+                          <p className="text-white/50 text-xs">Max 300MB • Auto-compressed</p>
                         </div>
-                      )} */}
+                      )}
                     </div>
+                    {videoUploadError && (
+                      <p className="text-[#FE2E2E] text-sm mt-2">{videoUploadError}</p>
+                    )}
                   </div>
                 </div>
+
                 <div className="w-full">
                   {fields.map((item, index) => (
                     <div key={item.id} className="flex flex-row items-center gap-4 mb-3">
                       <input
                         {...register(`list_link_share.${index}.link` as const, {
-                          required: files.length === 0,
+                          required: files.length === 0 && !uploadedVideoLink,
                         })}
                         placeholder={isFromVideoTrial ? 'Share a video link' : 'Share a link'}
                         className={twMerge(
                           'border-solid border-[1.5px] outline-0 w-full rounded-[12px] px-4 h-[45px] [boxShadow:_5px_5px_5px_0px_#000000a1] bg-transparent text-white placeholder:text-white/60',
-                          errors.list_link_share && files.length === 0
+                          errors.list_link_share && files.length === 0 && !uploadedVideoLink
                             ? ' border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
                             : ' border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
                         )}

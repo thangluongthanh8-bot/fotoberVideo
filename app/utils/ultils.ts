@@ -1,19 +1,4 @@
-import iconBrand from '@/app/components/layouts/main/assets/icon-branding.png'
-import iconCalender from '@/app/components/layouts/main/assets/icon-calender.png'
-// import iconCar from '@/app/components/layouts/main/assets/icon-car.png'
-import iconCar from '@/app/components/layouts/main/assets/icon-car-2.png'
-import iconImage360 from '@/app/components/layouts/main/assets/icon-image-360.png'
-import iconTech from '@/app/components/layouts/main/assets/icon-tech.png'
-import iconTab12 from '@/app/components/layouts/main/assets/icon-tab-12.png'
-import iconTab13 from '@/app/components/layouts/main/assets/icon-tab-13.png'
-import iconTab15 from '@/app/components/layouts/main/assets/icon-tab-15.png'
-import iconTab17 from '@/app/components/layouts/main/assets/icon-tab-17.png'
-import iconTabImage3 from '@/app/components/layouts/main/assets/icon-tab-image-3.png'
-import iconTabImage4 from '@/app/components/layouts/main/assets/icon-tab-image-4.png'
-import iconTabImage5 from '@/app/components/layouts/main/assets/icon-tab-image-5.png'
-import iconVideo from '@/app/components/layouts/main/assets/icon-video.png'
-import iconAboutUs from '@/app/components/layouts/main/assets/icon-about-us.png'
-import iconCareer from '@/app/components/layouts/main/assets/icon-career.png'
+
 import man01 from '@/app/components/SessionUnderConsiderationWithMockContent/assets/man_1.jpg'
 import man02 from '@/app/components/SessionUnderConsiderationWithMockContent/assets/man_2.jpg'
 import man03 from '@/app/components/SessionUnderConsiderationWithMockContent/assets/man_3.jpg'
@@ -27,9 +12,6 @@ import female01 from '@/app/components/SessionUnderConsiderationWithMockContent/
 // import { isMobile } from 'react-device-detect'
 import { createDirectus, rest } from '@directus/sdk'
 
-const BASE_URL = 'https://api-fotober.fotober.com/assets/'
-
-type ImageUrlParams = string | { id: string; fileName?: string | null }
 
 
 
