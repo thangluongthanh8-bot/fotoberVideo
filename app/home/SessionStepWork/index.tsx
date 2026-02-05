@@ -17,7 +17,7 @@ const listAction = [
     title: 'Upload Files',
     icon: iconStep1,
     description:
-      'Whether adding professional photos  or images you took yourself, use the easy upload feature to submit.',
+      'Whether adding professional-grade footage or video clips you recorded yourself, use the easy upload feature to submit your files for editing.',
   },
   {
     title: 'Fotober Editing',
@@ -34,7 +34,7 @@ const listAction = [
     title: 'Get Them Delivered',
     icon: iconStep4,
     description:
-      'Within 12 - 24 hours, your images and videos will arrive in your email. You can always submit for revision if needed.',
+      'Within 12-24 hours, your videos will arrive in your email. You can always submit for revision if needed.',
   },
 ]
 
@@ -57,7 +57,7 @@ function SessionStepWork() {
         </LightSpeedInLeft>
         <Fadein>
           <p className="md:text-[24px] text-[18px] text-white pt-4">
-            Get High Quality Real Estate Images & Video in Just 4 Simple Steps
+            Get High-Quality Real Estate Video in Just 4 Simple Steps
           </p>
         </Fadein>
 

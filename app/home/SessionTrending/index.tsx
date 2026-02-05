@@ -1,11 +1,12 @@
 'use client'
 
-import React from 'react'
+import React, { useCallback } from 'react'
 import { Pagination } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import 'swiper/css'
 import 'swiper/css/pagination'
 import VimeoPlayer from '@/app/components/commons/VimeoPlayer'
+import Button from '@/app/components/commons/Button'
 
 // Video data - replace vimeo IDs as needed
 const trendingVideos = [
@@ -30,6 +31,16 @@ const trendingVideos = [
 ]
 
 const SessionTrending = () => {
+    const handleScroll = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        e.preventDefault()
+        const section = document.querySelector('#bulk-order-form')
+        if (section) {
+            section.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+            })
+        }
+    }, [])
     return (
         <section
             className="w-full py-16 px-4 bg-[#043263]"
@@ -94,6 +105,9 @@ const SessionTrending = () => {
                         ))}
                     </Swiper>
                 </div>
+            </div>
+            <div aria-hidden onClick={handleScroll} className="m-auto w-max">
+                <Button title="Place Order Now" wrapClassName="cursor-pointer hover:bg-[#043263] hover:text-white flex flex-row items-center justify-center text-[#043263] w-[180px] md:w-[260px] h-[37px] md:h-[53px] text-[16px] md:text-[24px] bg-white rounded-[12px] font-bold border-[1px] !border-white" />
             </div>
         </section>
     )

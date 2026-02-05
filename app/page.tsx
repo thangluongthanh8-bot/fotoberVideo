@@ -6,37 +6,37 @@ import SessionBg from './home/SessionBg'
 import dynamic from 'next/dynamic'
 import FaqSession from './components/FaqSession'
 import { headers } from 'next/headers';
-// Lazy load below-the-fold components for better initial load performance
+import SessionServiceChild from './home/SessionServiceChild'
 const SessionWhyChoose = dynamic(() => import('./home/SessionWhyChoose'), {
-  loading: () => <div className="h-[400px] animate-pulse bg-gray-100" />,
+  loading: () => <div className="h-[400px] bg-gray-100" />,
 })
 
 const SessionTrending = dynamic(() => import('./home/SessionTrending'), {
-  loading: () => <div className="h-[600px] animate-pulse bg-gray-100" />,
+  loading: () => <div className="h-[600px] bg-gray-100" />,
 })
 
 const SessionStepWork = dynamic(() => import('./home/SessionStepWork'), {
-  loading: () => <div className="h-[400px] animate-pulse bg-gray-100" />,
+  loading: () => <div className="h-[400px] bg-gray-100" />,
 })
 
 const SlideVideo = dynamic(() => import('./home/SessionStepWork/SlideVideo'), {
-  loading: () => <div className="h-[400px] animate-pulse bg-gray-100" />,
+  loading: () => <div className="h-[400px] bg-gray-100" />,
 })
 
 const SessionClients = dynamic(() => import('./home/SessionClients'), {
-  loading: () => <div className="h-[200px] animate-pulse bg-gray-100" />,
+  loading: () => <div className="h-[200px] bg-gray-100" />,
 })
 
 const SessionOutStory = dynamic(() => import('./home/SessionOutStory'), {
-  loading: () => <div className="h-[400px] animate-pulse bg-gray-100" />,
+  loading: () => <div className="h-[400px] bg-gray-100" />,
 })
 
 const SessionSimpleSteps = dynamic(() => import('@/app/home/SessionSimpleSteps'), {
-  loading: () => <div className="h-[300px] animate-pulse bg-gray-100" />,
+  loading: () => <div className="h-[300px] bg-gray-100" />,
 })
 
 const SessionContact = dynamic(() => import('./home/SessionContact'), {
-  loading: () => <div className="h-[500px] animate-pulse bg-gray-100" />,
+  loading: () => <div className="h-[500px] bg-gray-100" />,
 })
 
 const title = 'Fotober Video Editing - Real Estate Video Editing'
@@ -66,16 +66,21 @@ export default function Home() {
     <>
       <LayoutMain>
         <main className=" w-full h-full bg-white text-[#1A1A1A] overflow-hidden mt-[-112px]">
-          {/* Critical above-the-fold content - loaded immediately */}
           <SessionBg />
-
-          {/* Below-the-fold - lazy loaded */}
           <SessionWhyChoose />
 
           <section className="py-7" id="id-trending">
             <SessionTrending />
           </section>
+          <section className=" py-7" id="id-step-work">
+            <div className='container-custom'>
 
+              <h2 className="w-full text-wrap text-center uppercase font-montserrat text-[#043263] font-extrabold text-lg md:text-[23px] md:leading-[45px] my-0">
+                Simple & Clean Way to Advertise Your Real Estate
+              </h2>
+              <SessionServiceChild />
+            </div>
+          </section>
           <section className="py-7" id="id-step-work">
             <SessionStepWork />
             <SlideVideo />

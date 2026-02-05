@@ -404,7 +404,7 @@ function SessionContact({
                       })}
                     >
                       <input {...getInputProps()} />
-                      {files?.length > 0 ? (
+                      {/* {files?.length > 0 ? (
                         <div className="w-full overflow-y-hidden overflow-x-auto flex flex-row items-center justify-center gap-4 border-white/40 border-solid border-[1.5px] rounded-[12px] p-4 h-[120px] cursor-pointer">
                           {files.map((f, index) => (
                             <div key={index} className="flex h-full w-full relative flex-col gap-1">
@@ -434,7 +434,7 @@ function SessionContact({
                             <p className="text-base text-white font-semibold">Upload photo </p>
                           </div>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>

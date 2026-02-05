@@ -54,7 +54,7 @@ const SlideVideo = () => {
     return (
         <div className="container-custom mt-[30px] md:mt-[50px] mb-[30px] md:mb-[50px] relative px-4 md:px-0">
             <h2 className="text-[20px] md:text-[24px] font-bold text-center text-[#043263] mb-4 md:mb-5">
-                10 Steps to Make a Spectacular Real Estate Video
+                Go Behind the Scenes: How We Craft Your Masterpiece
             </h2>
             <div className="slide-team-fade relative list-card-slide-shadow container-custom flex justify-center items-center">
                 {/* Navigation buttons - hidden on mobile */}

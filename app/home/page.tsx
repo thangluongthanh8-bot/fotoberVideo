@@ -9,6 +9,7 @@ import SessionOutStory from './SessionOutStory'
 import SessionContact from './SessionContact'
 import SessionUnderConsiderationWithMockContent from '../components/SessionUnderConsiderationWithMockContent'
 import { dataMockSessionUnderConsideration } from '../utils/ultils'
+import SessionServiceChild from './SessionServiceChild'
 
 const title = 'Fotober Video Editing - Real Estate Video Editing'
 const description =
@@ -39,6 +40,7 @@ function Home() {
         <main className=" w-full h-full bg-white text-[#1A1A1A] overflow-hidden mt-[-112px]">
           <SessionBg />
           <SessionWhyChoose />
+        
           <section className=" py-7" id="id-step-work">
             <SessionStepWork />
           </section>

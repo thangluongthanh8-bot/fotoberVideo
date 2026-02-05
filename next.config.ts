@@ -71,10 +71,10 @@ const nextConfig: NextConfig = {
   // ============================================
   async headers() {
     return [
+      // Security headers for all routes (no cache header here)
       {
         source: '/(.*)',
         headers: [
-          // Security headers
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
@@ -91,16 +91,31 @@ const nextConfig: NextConfig = {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
           },
-          // Cache static assets aggressively
+        ],
+      },
+      // Cache static images aggressively (1 year)
+      {
+        source: '/:all*(svg|jpg|jpeg|png|gif|ico|webp|avif)',
+        headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
           },
         ],
       },
-      // Cache images and static files
+      // Cache fonts aggressively (1 year)
       {
-        source: '/static/(.*)',
+        source: '/:all*(woff|woff2|ttf|otf|eot)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Cache Next.js static assets (they have content hash in filename)
+      {
+        source: '/_next/static/:path*',
         headers: [
           {
             key: 'Cache-Control',
