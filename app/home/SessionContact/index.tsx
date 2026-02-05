@@ -5,9 +5,8 @@ import LightSpeedInLeft from '@/app/components/animations/LightSpeedInLeft'
 import Button from '@/app/components/commons/Button'
 import FormSuccess from '@/app/components/FormSuccess'
 import { clientDirectus } from '@/app/utils/ultils'
-import { uploadToGoogleDrive, formatFileSize, UploadProgress } from '@/app/utils/googleDriveUpload'
-import { compressVideo, CompressionProgress, isCompressionSupported } from '@/app/utils/videoCompression'
-import { uploadFiles, createItem, readItems } from '@directus/sdk'
+import { uploadToGoogleDrive, formatFileSize } from '@/app/utils/googleDriveUpload'
+import { uploadFiles, createItem } from '@directus/sdk'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -16,18 +15,9 @@ import { useDropzone } from 'react-dropzone'
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import iconUpload1 from './assets/icon-upload-1.png'
-import iconUpload from './assets/icon-upload.png'
 import imageStep3 from './assets/step-1.png'
 import imageStep2 from './assets/step-2.png'
 import imageStep1 from './assets/step-3.png'
-
-interface Category {
-  id: string
-  title: string
-  color: string
-  slug: string
-}
-
 
 type LinkInput = {
   link: string
@@ -79,7 +69,6 @@ function SessionContact({
     handleSubmit,
     reset,
     control,
-    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: {
@@ -94,27 +83,19 @@ function SessionContact({
   const currentContent = searchParams.get('utm_content')
   const currentTerm = searchParams.get('utm_term')
 
-  // handler upload file
-
+  // File upload states
   const [files, setFiles] = useState<{ preview: string; fileName: string; fileData: File }[]>([])
   const [isUploadFileError, setIsUploadFileError] = useState<boolean>(false)
   const [isErrorSubmitForm, setIsErrorSubmitForm] = useState<boolean>(false)
   const [isSuccess, setIsSuccess] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
 
-  // Video upload states
+  // Video upload states (simplified)
   const [videoFile, setVideoFile] = useState<File | null>(null)
-  const [videoUploadProgress, setVideoUploadProgress] = useState<number>(0)
-  const [videoUploadSpeed, setVideoUploadSpeed] = useState<string>('')
-  const [videoUploadEta, setVideoUploadEta] = useState<string>('')
-  const [isCompressing, setIsCompressing] = useState<boolean>(false)
-  const [compressionProgress, setCompressionProgress] = useState<number>(0)
   const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false)
   const [videoUploadError, setVideoUploadError] = useState<string | null>(null)
   const [uploadedVideoLink, setUploadedVideoLink] = useState<string | null>(null)
-  const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null)
-  const [isProcessingOnServer, setIsProcessingOnServer] = useState<boolean>(false)
-  // const [categories, setCategories] = useState<Category[]>([])
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'list_link_share',
@@ -124,7 +105,6 @@ function SessionContact({
     noDrag: true,
     accept: {
       'image/*': [],
-      // 'video/*': [],
     },
     onDrop: (acceptedFiles) => {
       setFiles(
@@ -140,7 +120,7 @@ function SessionContact({
     },
   })
 
-  // Video dropzone for Google Drive upload with compression
+  // Video dropzone for Google Drive upload (no compression)
   const { getRootProps: getVideoRootProps, getInputProps: getVideoInputProps } = useDropzone({
     noDrag: true,
     accept: {
@@ -165,87 +145,26 @@ function SessionContact({
       // Reset states
       setVideoFile(file)
       setVideoUploadError(null)
-      setVideoUploadProgress(0)
-      setCompressionProgress(0)
       setUploadedVideoLink(null)
+      setIsUploadingVideo(true)
 
       try {
-        let fileToUpload: File = file
-
-        // Compress video if file is large (>10MB) and browser supports it
-        if (file.size > 10 * 1024 * 1024 && isCompressionSupported()) {
-          setIsCompressing(true)
-
-          const compressionResult = await compressVideo(
-            file,
-            { quality: 'medium', maxWidth: 1280, maxHeight: 720 },
-            (progress: CompressionProgress) => {
-              setCompressionProgress(progress.progress)
-            }
-          )
-
-          setIsCompressing(false)
-
-          if (compressionResult.success && compressionResult.compressedFile) {
-            fileToUpload = compressionResult.compressedFile
-            console.log(`Compressed: ${compressionResult.originalSize} -> ${compressionResult.compressedSize} (${compressionResult.compressionRatio}% reduction)`)
-          }
-        }
-
-        // Upload to Google Drive
-        setIsUploadingVideo(true)
-
-        const result = await uploadToGoogleDrive({
-          file: fileToUpload,
-          chunkSize: 50 * 1024 * 1024, // 50MB chunks
-          onProgress: (progress: UploadProgress) => {
-            setVideoUploadProgress(progress.percentage)
-            if (progress.speed) setVideoUploadSpeed(progress.speed)
-            if (progress.eta) setVideoUploadEta(progress.eta)
-            // When upload to server is complete (100%), show processing state
-            if (progress.percentage >= 100) {
-              setIsProcessingOnServer(true)
-            }
-          },
-        })
-
-        setIsProcessingOnServer(false)
+        // Upload directly to Google Drive (no compression)
+        const result = await uploadToGoogleDrive({ file })
 
         if (result.success && result.viewLink) {
           setUploadedVideoLink(result.viewLink)
-          // Generate video thumbnail preview
-          const thumbnailUrl = URL.createObjectURL(file)
-          setVideoThumbnail(thumbnailUrl)
         } else {
           setVideoUploadError(result.error || 'Upload failed')
         }
       } catch (error) {
-        setVideoUploadError('Failed to process video. Please try again.')
+        setVideoUploadError('Failed to upload video. Please try again.')
         console.error('Video upload error:', error)
-        setIsProcessingOnServer(false)
       } finally {
-        setIsCompressing(false)
         setIsUploadingVideo(false)
       }
     },
   })
-
-  // Fetch categories from Directus
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       const result = await clientDirectus.request(
-  //         readItems('categories', {
-  //           fields: ['id', 'title', 'color', 'slug'],
-  //         })
-  //       ) as Category[]
-  //       setCategories(result)
-  //     } catch (error) {
-  //       console.error('Failed to fetch categories:', error)
-  //     }
-  //   }
-  //   fetchCategories()
-  // }, [])
 
   const onCreateContact: SubmitHandler<FormValues> = React.useCallback(
     async (dataSubmit) => {
@@ -260,7 +179,7 @@ function SessionContact({
               return await clientDirectus.request(uploadFiles(formData))
             } catch (error) {
               setIsUploadFileError(true)
-              throw error // Throwing error to be caught by Promise.catch
+              throw error
             }
           }),
         )
@@ -280,7 +199,6 @@ function SessionContact({
           }
         })
         try {
-          console.log('uploadedVideoLink', uploadedVideoLink)
           await clientDirectus.request(
             createItem('contact_form_home', {
               name: dataSubmit.name,
@@ -313,8 +231,6 @@ function SessionContact({
       } else {
         setLoading(true)
         try {
-          console.log("uploadedVideoLink2222", uploadedVideoLink);
-
           await clientDirectus.request(
             createItem('contact_form_home', {
               name: dataSubmit.name,
@@ -476,31 +392,6 @@ function SessionContact({
                 )}
               </div>
               <div className="flex flex-col gap-4 justify-center items-center">
-                {/* <p className="text-white w-full text-left font-semibold text-xl">
-                  Choose the service for quotation
-                </p> */}
-                {/* <select
-                  defaultValue=""
-                  className={twMerge(
-                    'border-solid border-[1.7px] outline-0 w-full rounded-[12px] px-4 h-[45px] cursor-pointer bg-transparent text-white',
-                    errors.service
-                      ? 'border-[#FE2E2E] [boxShadow:_0px_0px_10px_0px_rgba(254,46,46,0.5)]'
-                      : 'border-white/40 [boxShadow:_5px_5px_10px_0px_rgba(255,255,255,0.2)]',
-                  )}
-                  {...register('service', { required: true })}
-                >
-                  <option value="" disabled hidden className='text-white'>
-                    Select services
-                  </option>
-                  {categories?.map((category: Category) => (
-                    <option key={category.id} value={category.id} className='text-black'>
-                      {category.title}
-                    </option>
-                  ))}
-                </select>
-                {errors.service && (
-                  <p className="text-[#FE2E2E] w-full text-sm  text-left">The field is required.</p>
-                )} */}
                 <textarea
                   {...register('description')}
                   placeholder="Write your message here along with"
@@ -518,20 +409,7 @@ function SessionContact({
                       })}
                     >
                       <input {...getVideoInputProps()} />
-                      {isCompressing ? (
-                        <div className="w-full flex flex-col items-center justify-center gap-3 border-yellow-500/60 border-solid border-[1.5px] rounded-[12px] p-4 h-[140px]">
-                          <p className="text-yellow-400 text-sm font-semibold">
-                            🔄 Compressing video for faster upload...
-                          </p>
-                          <div className="w-full bg-white/20 rounded-full h-3">
-                            <div
-                              className="bg-yellow-500 h-3 rounded-full transition-all duration-300"
-                              style={{ width: `${compressionProgress}%` }}
-                            />
-                          </div>
-                          <p className="text-white text-sm">{compressionProgress}%</p>
-                        </div>
-                      ) : isUploadingVideo ? (
+                      {isUploadingVideo ? (
                         <div className="w-full flex flex-col items-center justify-center gap-3 border-white/40 border-solid border-[1.5px] rounded-[12px] p-4 h-[120px]">
                           <p className="text-white text-sm">
                             📤 Uploading: {videoFile?.name}
@@ -568,11 +446,6 @@ function SessionContact({
                               e.stopPropagation()
                               setVideoFile(null)
                               setUploadedVideoLink(null)
-                              setVideoUploadProgress(0)
-                              if (videoThumbnail) {
-                                URL.revokeObjectURL(videoThumbnail)
-                                setVideoThumbnail(null)
-                              }
                             }}
                             className="text-red-400 hover:text-red-300 p-2 flex-shrink-0"
                             title="Xóa video"
@@ -598,7 +471,7 @@ function SessionContact({
                             <Image alt="fotober" src={iconUpload1} className="w-[16px] h-[16px] invert brightness-200" />
                             <p className="text-base text-white font-semibold">Upload video</p>
                           </div>
-                          <p className="text-white/50 text-xs">Max 300MB • Auto-compressed</p>
+                          <p className="text-white/50 text-xs">Max 300MB</p>
                         </div>
                       )}
                     </div>
@@ -658,7 +531,6 @@ function SessionContact({
                   loading={loading}
                   type="submit"
                   title="SUBMIT"
-                  // showArrow
                   wrapClassName="min-w-[150px] btn-bg-primary rounded-[5px]"
                 />
                 {isErrorSubmitForm && (
@@ -667,13 +539,6 @@ function SessionContact({
                     via email at contact@fotober.com.
                   </p>
                 )}
-                {/* <div className="w-full flex justify-end md:col-span-2 flex-col items-end gap-2">
-                  <Turnstile
-                    className="w-auto"
-                    sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                    onVerify={(el) => setToken(el)}
-                  />
-                </div> */}
               </div>
             </>
           )}
