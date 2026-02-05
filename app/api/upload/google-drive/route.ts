@@ -103,9 +103,5 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// Config
-export const config = {
-    api: {
-        bodyParser: true,
-    },
-}
+// Runtime config for edge/nodejs
+export const runtime = 'nodejs'
