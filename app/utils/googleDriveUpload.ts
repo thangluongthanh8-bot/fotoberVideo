@@ -1,7 +1,7 @@
 /**
  * Google Drive Upload Utility
- * Uses Google Drive Resumable Upload API
- * Client uploads directly to Google Drive - bypasses Vercel payload limits
+ * Uses Google Drive Resumable Upload API via server proxy
+ * Chunks are proxied through server to bypass CORS
  */
 
 export interface UploadResult {
@@ -19,11 +19,12 @@ export interface UploadOptions {
     onError?: (error: string) => void
 }
 
-const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB chunks (Google requires multiples of 256KB)
+// 3MB chunks - safely under Vercel's 4.5MB limit
+const CHUNK_SIZE = 3 * 1024 * 1024
 
 /**
  * Upload a video file to Google Drive using resumable upload
- * Client uploads directly to Google Drive after getting resumable URI
+ * Chunks are proxied through our server to bypass CORS
  */
 export async function uploadToGoogleDrive(options: UploadOptions): Promise<UploadResult> {
     const { file, onProgress, onComplete, onError } = options
@@ -63,7 +64,7 @@ export async function uploadToGoogleDrive(options: UploadOptions): Promise<Uploa
         const resumableUri = initData.resumableUri
         onProgress?.(5)
 
-        // Step 2: Upload file in chunks DIRECTLY to Google Drive
+        // Step 2: Upload file in chunks through our server (proxy to Google Drive)
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
         let uploadedBytes = 0
 
@@ -71,46 +72,41 @@ export async function uploadToGoogleDrive(options: UploadOptions): Promise<Uploa
             const start = i * CHUNK_SIZE
             const end = Math.min(start + CHUNK_SIZE, file.size)
             const chunk = file.slice(start, end)
-            const chunkSize = end - start
 
             // Content-Range header format: bytes start-end/total
             const contentRange = `bytes ${start}-${end - 1}/${file.size}`
 
-            // Upload chunk DIRECTLY to Google Drive (not through our server)
-            const chunkResponse = await fetch(resumableUri, {
+            // Upload chunk via our server (which forwards to Google Drive)
+            const chunkResponse = await fetch('/api/upload/google-drive', {
                 method: 'PUT',
                 headers: {
-                    'Content-Length': chunkSize.toString(),
-                    'Content-Range': contentRange,
+                    'x-resumable-uri': resumableUri,
+                    'x-content-range': contentRange,
                 },
                 body: chunk,
             })
 
-            // Check response status
-            if (chunkResponse.status === 200 || chunkResponse.status === 201) {
-                // Upload complete!
-                const fileData = await chunkResponse.json()
-                const fileId = fileData.id
-                const viewLink = fileData.webViewLink || `https://drive.google.com/file/d/${fileId}/view`
+            const chunkData = await chunkResponse.json()
 
+            if (!chunkResponse.ok || !chunkData.success) {
+                throw new Error(chunkData.error || `Failed to upload chunk ${i + 1}`)
+            }
+
+            uploadedBytes = end
+            const progress = Math.round(5 + (uploadedBytes / file.size) * 90)
+            onProgress?.(progress)
+
+            // If upload is complete
+            if (chunkData.complete && chunkData.viewLink) {
                 onProgress?.(100)
                 const result: UploadResult = {
                     success: true,
-                    fileId,
-                    fileName: fileData.name,
-                    viewLink,
+                    fileId: chunkData.fileId,
+                    fileName: chunkData.fileName,
+                    viewLink: chunkData.viewLink,
                 }
                 onComplete?.(result)
                 return result
-            } else if (chunkResponse.status === 308) {
-                // Chunk received, more to come
-                uploadedBytes = end
-                const progress = Math.round(5 + (uploadedBytes / file.size) * 90)
-                onProgress?.(progress)
-            } else {
-                // Error
-                const errorText = await chunkResponse.text()
-                throw new Error(`Upload failed: ${chunkResponse.status} - ${errorText}`)
             }
         }
 
