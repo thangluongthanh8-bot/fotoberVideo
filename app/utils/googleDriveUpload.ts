@@ -1,7 +1,7 @@
 /**
  * Google Drive Upload Utility
- * Uses chunked upload to bypass Vercel's 4.5MB body size limit
- * Sends file in 3MB chunks through server to Google Drive
+ * Uses Google Drive Resumable Upload API to bypass Vercel's limitations
+ * Upload directly to Google Drive in chunks via resumable session
  */
 
 export interface UploadResult {
@@ -19,10 +19,10 @@ export interface UploadOptions {
     onError?: (error: string) => void
 }
 
-const CHUNK_SIZE = 3 * 1024 * 1024 // 3MB chunks (under Vercel's 4.5MB limit)
+const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB chunks (Google Drive requires multiples of 256KB)
 
 /**
- * Upload a video file to Google Drive using chunked upload
+ * Upload a video file to Google Drive using resumable upload
  */
 export async function uploadToGoogleDrive(options: UploadOptions): Promise<UploadResult> {
     const { file, onProgress, onComplete, onError } = options
@@ -40,7 +40,7 @@ export async function uploadToGoogleDrive(options: UploadOptions): Promise<Uploa
 
         onProgress?.(0)
 
-        // Step 1: Initialize upload session
+        // Step 1: Initialize resumable upload session with Google Drive
         const initResponse = await fetch('/api/upload/google-drive', {
             method: 'POST',
             headers: {
@@ -59,26 +59,29 @@ export async function uploadToGoogleDrive(options: UploadOptions): Promise<Uploa
             throw new Error(initData.error || 'Failed to initialize upload')
         }
 
-        const sessionId = initData.sessionId
+        const resumableUri = initData.resumableUri
         onProgress?.(5)
 
-        // Step 2: Upload file in chunks
+        // Step 2: Upload file in chunks directly to Google Drive
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
-        let uploadedChunks = 0
+        let uploadedBytes = 0
 
         for (let i = 0; i < totalChunks; i++) {
             const start = i * CHUNK_SIZE
             const end = Math.min(start + CHUNK_SIZE, file.size)
             const chunk = file.slice(start, end)
-            const isLastChunk = i === totalChunks - 1
+            const chunkSize = end - start
 
+            // Content-Range header format: bytes start-end/total
+            const contentRange = `bytes ${start}-${end - 1}/${file.size}`
+
+            // Upload chunk via our API (which forwards to Google Drive)
             const chunkResponse = await fetch('/api/upload/google-drive', {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
-                    'x-session-id': sessionId,
-                    'x-chunk-index': i.toString(),
-                    'x-total-chunks': totalChunks.toString(),
-                    'x-is-last': isLastChunk.toString(),
+                    'x-resumable-uri': resumableUri,
+                    'Content-Range': contentRange,
+                    'Content-Length': chunkSize.toString(),
                 },
                 body: chunk,
             })
@@ -89,8 +92,8 @@ export async function uploadToGoogleDrive(options: UploadOptions): Promise<Uploa
                 throw new Error(chunkData.error || `Failed to upload chunk ${i + 1}`)
             }
 
-            uploadedChunks++
-            const progress = Math.round(5 + (uploadedChunks / totalChunks) * 90) // 5% to 95%
+            uploadedBytes = end
+            const progress = Math.round(5 + (uploadedBytes / file.size) * 90) // 5% to 95%
             onProgress?.(progress)
 
             // If upload is complete (last chunk processed)

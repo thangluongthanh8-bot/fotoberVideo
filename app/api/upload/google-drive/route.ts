@@ -18,31 +18,21 @@ oauth2Client.setCredentials({
 // Initialize Drive API
 const drive = google.drive({ version: 'v3', auth: oauth2Client })
 
-// In-memory storage for chunked uploads
-const uploadSessions = new Map<string, {
-    chunks: Buffer[]
-    fileName: string
-    fileType: string
-    totalSize: number
-    receivedSize: number
-}>()
-
-// POST: Handle chunked upload or initialize session
+// POST: Initialize resumable upload session with Google Drive
 export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type') || ''
 
-    // Check if this is a chunk upload or session init
+    // Check if this is initializing a session or uploading directly
     if (contentType.includes('application/json')) {
-        // Initialize upload session
-        return initializeSession(request)
+        return initializeResumableSession(request)
     } else {
-        // Handle chunk upload
-        return handleChunkUpload(request)
+        // Direct single-request upload for small files
+        return handleDirectUpload(request)
     }
 }
 
-// Initialize a new upload session
-async function initializeSession(request: NextRequest) {
+// Initialize a resumable upload session with Google Drive
+async function initializeResumableSession(request: NextRequest) {
     try {
         const body = await request.json()
         const { fileName, fileType, fileSize } = body
@@ -54,27 +44,49 @@ async function initializeSession(request: NextRequest) {
             )
         }
 
-        const sessionId = `${Date.now()}_${Math.random().toString(36).substring(7)}`
         const finalFileName = `${Date.now()}_${fileName}`
 
-        uploadSessions.set(sessionId, {
-            chunks: [],
-            fileName: finalFileName,
-            fileType,
-            totalSize: fileSize || 0,
-            receivedSize: 0,
-        })
+        // Get access token
+        const accessToken = await oauth2Client.getAccessToken()
+        if (!accessToken.token) {
+            throw new Error('Failed to get access token')
+        }
 
-        // Clean up old sessions after 30 minutes
-        setTimeout(() => {
-            uploadSessions.delete(sessionId)
-        }, 30 * 60 * 1000)
+        // Initialize resumable upload session with Google Drive API
+        const initResponse = await fetch(
+            'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken.token}`,
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'X-Upload-Content-Type': fileType,
+                    'X-Upload-Content-Length': fileSize.toString(),
+                },
+                body: JSON.stringify({
+                    name: finalFileName,
+                    parents: DRIVE_FOLDER_ID ? [DRIVE_FOLDER_ID] : undefined,
+                }),
+            }
+        )
 
-        console.log('=== Upload Session Created ===', sessionId)
+        if (!initResponse.ok) {
+            const errorText = await initResponse.text()
+            console.error('Google Drive init error:', errorText)
+            throw new Error(`Google Drive API error: ${initResponse.status}`)
+        }
+
+        // Get the resumable upload URI from response headers
+        const resumableUri = initResponse.headers.get('location')
+        if (!resumableUri) {
+            throw new Error('No resumable URI returned from Google Drive')
+        }
+
+        console.log('=== Resumable Upload Session Created ===')
 
         return NextResponse.json({
             success: true,
-            sessionId,
+            resumableUri,
             fileName: finalFileName,
         })
 
@@ -87,93 +99,118 @@ async function initializeSession(request: NextRequest) {
     }
 }
 
-// Handle incoming chunk
-async function handleChunkUpload(request: NextRequest) {
+// Handle direct upload for small files (under 5MB)
+async function handleDirectUpload(request: NextRequest) {
     try {
-        const sessionId = request.headers.get('x-session-id')
-        const chunkIndex = parseInt(request.headers.get('x-chunk-index') || '0')
-        const totalChunks = parseInt(request.headers.get('x-total-chunks') || '1')
-        const isLastChunk = request.headers.get('x-is-last') === 'true'
+        const fileName = request.headers.get('x-file-name') || `upload_${Date.now()}`
+        const fileType = request.headers.get('x-file-type') || 'application/octet-stream'
 
-        if (!sessionId) {
+        const arrayBuffer = await request.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+
+        // Create readable stream from buffer
+        const stream = new Readable()
+        stream.push(buffer)
+        stream.push(null)
+
+        // Upload to Google Drive
+        const response = await drive.files.create({
+            requestBody: {
+                name: `${Date.now()}_${fileName}`,
+                parents: DRIVE_FOLDER_ID ? [DRIVE_FOLDER_ID] : undefined,
+            },
+            media: {
+                mimeType: fileType,
+                body: stream,
+            },
+            fields: 'id,name,webViewLink',
+        })
+
+        const fileId = response.data.id
+        const viewLink = response.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`
+
+        console.log('=== Direct Upload Complete ===', fileId)
+
+        return NextResponse.json({
+            success: true,
+            complete: true,
+            fileId,
+            fileName: response.data.name,
+            viewLink,
+        })
+
+    } catch (error: any) {
+        console.error('Direct upload error:', error?.message)
+        return NextResponse.json(
+            { error: 'Failed to upload file', details: error?.message },
+            { status: 500 }
+        )
+    }
+}
+
+// PUT: Handle chunk upload to Google Drive resumable URI
+export async function PUT(request: NextRequest) {
+    try {
+        const resumableUri = request.headers.get('x-resumable-uri')
+        const contentRange = request.headers.get('content-range')
+        const contentLength = request.headers.get('content-length')
+
+        if (!resumableUri) {
             return NextResponse.json(
-                { error: 'Session ID required' },
+                { error: 'Resumable URI is required' },
                 { status: 400 }
-            )
-        }
-
-        const session = uploadSessions.get(sessionId)
-        if (!session) {
-            return NextResponse.json(
-                { error: 'Session not found or expired' },
-                { status: 404 }
             )
         }
 
         // Get chunk data
         const arrayBuffer = await request.arrayBuffer()
-        const chunkBuffer = Buffer.from(arrayBuffer)
 
-        session.chunks[chunkIndex] = chunkBuffer
-        session.receivedSize += chunkBuffer.length
+        // Upload chunk directly to Google Drive
+        const uploadResponse = await fetch(resumableUri, {
+            method: 'PUT',
+            headers: {
+                'Content-Length': contentLength || arrayBuffer.byteLength.toString(),
+                'Content-Range': contentRange || '*/*',
+            },
+            body: arrayBuffer,
+        })
 
-        console.log(`Chunk ${chunkIndex + 1}/${totalChunks} received (${chunkBuffer.length} bytes)`)
+        // Check response status
+        if (uploadResponse.status === 200 || uploadResponse.status === 201) {
+            // Upload complete
+            const fileData = await uploadResponse.json()
+            const fileId = fileData.id
+            const viewLink = fileData.webViewLink || `https://drive.google.com/file/d/${fileId}/view`
 
-        // If this is the last chunk, combine and upload to Google Drive
-        if (isLastChunk || chunkIndex === totalChunks - 1) {
-            console.log('=== All chunks received, uploading to Google Drive ===')
-
-            // Combine all chunks
-            const completeBuffer = Buffer.concat(session.chunks)
-
-            // Create readable stream from buffer
-            const stream = new Readable()
-            stream.push(completeBuffer)
-            stream.push(null)
-
-            // Upload to Google Drive
-            const response = await drive.files.create({
-                requestBody: {
-                    name: session.fileName,
-                    parents: DRIVE_FOLDER_ID ? [DRIVE_FOLDER_ID] : undefined,
-                },
-                media: {
-                    mimeType: session.fileType,
-                    body: stream,
-                },
-                fields: 'id,name,webViewLink',
-            })
-
-            // Clean up session
-            uploadSessions.delete(sessionId)
-
-            const fileId = response.data.id
-            const viewLink = response.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`
-
-            console.log('=== Upload Complete ===', fileId)
+            console.log('=== Resumable Upload Complete ===', fileId)
 
             return NextResponse.json({
                 success: true,
                 complete: true,
                 fileId,
-                fileName: response.data.name,
+                fileName: fileData.name,
                 viewLink,
             })
-        }
+        } else if (uploadResponse.status === 308) {
+            // Chunk received, more to come
+            const range = uploadResponse.headers.get('range')
+            const uploadedBytes = range ? parseInt(range.split('-')[1]) + 1 : 0
 
-        // Return progress for intermediate chunks
-        return NextResponse.json({
-            success: true,
-            complete: false,
-            chunkIndex,
-            receivedSize: session.receivedSize,
-            progress: Math.round((session.receivedSize / session.totalSize) * 100),
-        })
+            return NextResponse.json({
+                success: true,
+                complete: false,
+                uploadedBytes,
+            })
+        } else {
+            const errorText = await uploadResponse.text()
+            console.error('Google Drive upload error:', uploadResponse.status, errorText)
+            throw new Error(`Upload failed: ${uploadResponse.status}`)
+        }
 
     } catch (error: any) {
         console.error('Chunk upload error:', error?.message)
         return NextResponse.json(
-            { error: 'Failed to process chunk', details: error?.message },
+            { error: 'Failed to upload chunk', details: error?.message },
             { status: 500 }
         )
     }
