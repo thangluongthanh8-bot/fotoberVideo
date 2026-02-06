@@ -1,7 +1,7 @@
 /**
  * Google Drive Upload Utility
- * Uses Google Drive Resumable Upload API to bypass Vercel's limitations
- * Upload directly to Google Drive in chunks via resumable session
+ * Uses Google Drive Resumable Upload API
+ * Client uploads directly to Google Drive - bypasses Vercel payload limits
  */
 
 export interface UploadResult {
@@ -19,10 +19,11 @@ export interface UploadOptions {
     onError?: (error: string) => void
 }
 
-const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB chunks (Google Drive requires multiples of 256KB)
+const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB chunks (Google requires multiples of 256KB)
 
 /**
  * Upload a video file to Google Drive using resumable upload
+ * Client uploads directly to Google Drive after getting resumable URI
  */
 export async function uploadToGoogleDrive(options: UploadOptions): Promise<UploadResult> {
     const { file, onProgress, onComplete, onError } = options
@@ -40,7 +41,7 @@ export async function uploadToGoogleDrive(options: UploadOptions): Promise<Uploa
 
         onProgress?.(0)
 
-        // Step 1: Initialize resumable upload session with Google Drive
+        // Step 1: Get resumable upload URI from our server
         const initResponse = await fetch('/api/upload/google-drive', {
             method: 'POST',
             headers: {
@@ -62,7 +63,7 @@ export async function uploadToGoogleDrive(options: UploadOptions): Promise<Uploa
         const resumableUri = initData.resumableUri
         onProgress?.(5)
 
-        // Step 2: Upload file in chunks directly to Google Drive
+        // Step 2: Upload file in chunks DIRECTLY to Google Drive
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
         let uploadedBytes = 0
 
@@ -75,38 +76,41 @@ export async function uploadToGoogleDrive(options: UploadOptions): Promise<Uploa
             // Content-Range header format: bytes start-end/total
             const contentRange = `bytes ${start}-${end - 1}/${file.size}`
 
-            // Upload chunk via our API (which forwards to Google Drive)
-            const chunkResponse = await fetch('/api/upload/google-drive', {
+            // Upload chunk DIRECTLY to Google Drive (not through our server)
+            const chunkResponse = await fetch(resumableUri, {
                 method: 'PUT',
                 headers: {
-                    'x-resumable-uri': resumableUri,
-                    'Content-Range': contentRange,
                     'Content-Length': chunkSize.toString(),
+                    'Content-Range': contentRange,
                 },
                 body: chunk,
             })
 
-            const chunkData = await chunkResponse.json()
+            // Check response status
+            if (chunkResponse.status === 200 || chunkResponse.status === 201) {
+                // Upload complete!
+                const fileData = await chunkResponse.json()
+                const fileId = fileData.id
+                const viewLink = fileData.webViewLink || `https://drive.google.com/file/d/${fileId}/view`
 
-            if (!chunkResponse.ok || !chunkData.success) {
-                throw new Error(chunkData.error || `Failed to upload chunk ${i + 1}`)
-            }
-
-            uploadedBytes = end
-            const progress = Math.round(5 + (uploadedBytes / file.size) * 90) // 5% to 95%
-            onProgress?.(progress)
-
-            // If upload is complete (last chunk processed)
-            if (chunkData.complete && chunkData.viewLink) {
                 onProgress?.(100)
                 const result: UploadResult = {
                     success: true,
-                    fileId: chunkData.fileId,
-                    fileName: chunkData.fileName,
-                    viewLink: chunkData.viewLink,
+                    fileId,
+                    fileName: fileData.name,
+                    viewLink,
                 }
                 onComplete?.(result)
                 return result
+            } else if (chunkResponse.status === 308) {
+                // Chunk received, more to come
+                uploadedBytes = end
+                const progress = Math.round(5 + (uploadedBytes / file.size) * 90)
+                onProgress?.(progress)
+            } else {
+                // Error
+                const errorText = await chunkResponse.text()
+                throw new Error(`Upload failed: ${chunkResponse.status} - ${errorText}`)
             }
         }
 
