@@ -261,7 +261,7 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <link rel="shortcut icon" href="/logo.png" />
-        {/* Preconnect để tải font và assets nhanh hơn */}
+        <link rel="preload" href="/walk.mp4" as="video" type="video/mp4" fetchPriority="high" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <Script

@@ -45,7 +45,7 @@ function ServiceStepDescription({
             </div>
 
             {/* Description - grows to fill remaining space */}
-            <p className="text-white text-[13px] md:text-[14px]  flex-1">
+            <p className="text-white text-[13px] md:text-[14px]  flex-1 text-justify inter-word break-all">
                 {description}
             </p>
         </div>
