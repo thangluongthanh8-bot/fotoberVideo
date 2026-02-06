@@ -71,9 +71,9 @@ function SessionBg() {
           </div>
         </div>
         <div className="flex flex-col md:flex-row gap-4 md:gap-12 justify-center items-center mt-10 md:mt-20 animate-fade-in-up">
-          <Link href="https://orders.fotober.com/">
+          {/* <Link href="https://orders.fotober.com/">
             <ButtonBanner title="START NOW" />
-          </Link>
+          </Link> */}
           <ButtonBanner onClick={handleScroll} title=" BOOK A TRIAL" />
         </div>
       </div>

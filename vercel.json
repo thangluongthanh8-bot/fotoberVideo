@@ -6,16 +6,5 @@
         "app/api/auth/google/callback/route.ts": {
             "maxDuration": 30
         }
-    },
-    "routes": [
-        {
-            "src": "/api/upload/google-drive",
-            "methods": [
-                "POST"
-            ],
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
-    ]
+    }
 }
